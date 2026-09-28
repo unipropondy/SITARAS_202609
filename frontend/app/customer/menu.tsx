@@ -813,7 +813,10 @@ export default function CustomerMenuScreen() {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={kitchens.filter(k => k.IsPublished !== 1 && k.IsPublished !== true && k.IsPublished !== '1')}
+          data={kitchens.filter(k => {
+            const isUnpublished = (val: any) => val === 0 || val === false || String(val) === '0';
+            return !isUnpublished(k.IsPublished);
+          })}
           keyExtractor={(item) => item.CategoryId}
           renderItem={({ item }) => {
             const isSelected = selectedKitchenId === item.CategoryId;
