@@ -1889,7 +1889,7 @@ router.post("/save", async (req, res) => {
       .input("TotalLineItemDiscountAmount", sql.Decimal(18, 2), itemDiscountAmount || 0)
       .input("MergeCount", sql.Numeric, mergeCount)
       .input("SplitCount", sql.Numeric, splitIndexValue)
-      .input("GuestName", sql.NVarChar(9), req.body.customerName ? req.body.customerName.trim().substring(0, 9) : (orderCustomerName || tableCustomerName || null))
+      .input("GuestName", sql.NVarChar(100), req.body.customerName ? req.body.customerName.trim().substring(0, 100) : (orderCustomerName || tableCustomerName || null))
       .input("Pax", sql.Int, req.body.pax ? parseInt(req.body.pax) : (orderPax || tablePax || null))
       .input("startDate", sql.Date, formattedStartDate)
       .query(`
