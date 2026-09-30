@@ -733,14 +733,15 @@ class UniversalPrinter {
               );
               await Promise.race([printPromise, timeoutPromise]);
             } else {
-              console.log(`ðŸ”µ KOT Bluetooth print to: ${targetIp}`);
+              console.log(`🔵 KOT Bluetooth print to: ${targetIp}`);
+              await ThermalPrinterImport?.getBluetoothDeviceList?.().catch(() => {});
               const printPromise = ThermalPrinter.printBluetooth({
                 macAddress: targetIp,
                 payload: text,
                 mmFeedPaper: 25,
               });
               const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("BT Timeout")), 3000),
+                setTimeout(() => reject(new Error("BT Timeout")), 12000),
               );
               await Promise.race([printPromise, timeoutPromise]);
             }
@@ -1400,6 +1401,20 @@ class UniversalPrinter {
         if (hasConfiguredIp) {
           console.log(`ðŸŒ Trying configured printer: ${targetIp}`);
           const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(targetIp.trim());
+
+          // 📲 Try Print Bridge if active on network (supports USB / Shared printers from APK)
+          const isBridge = await this.isBridgeOnline();
+          if (isBridge) {
+            try {
+              console.log(`📡 [APK Print Bridge] Queueing receipt to Print Bridge for: ${targetIp}`);
+              const text = this.formatThermalTextWithDiscount(saleData, company, discountInfo);
+              const pType = isTakeaway ? 3 : 1;
+              const success = await this.queuePrintJob(pType, undefined, text);
+              if (success) return;
+            } catch (bridgeErr) {
+              console.warn("APK Print Bridge queue failed, trying direct connection:", bridgeErr);
+            }
+          }
           let isReachable = false;
           if (isIp) {
             isReachable = await this.isIpReachable(targetIp, 9100);
@@ -1622,6 +1637,8 @@ class UniversalPrinter {
           mmFeedPaper: 25,
         });
       } else {
+        console.log(`🔵 Receipt Bluetooth print to: ${targetAddress}`);
+        await ThermalPrinterImport?.getBluetoothDeviceList?.().catch(() => {});
         await ThermalPrinter.printBluetooth({
           macAddress: targetAddress,
           payload: text,

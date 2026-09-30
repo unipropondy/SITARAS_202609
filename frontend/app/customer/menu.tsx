@@ -25,6 +25,7 @@ import { API_URL } from "../../constants/Config";
 import { Ionicons } from "@expo/vector-icons";
 import { formatToSingaporeDate, formatToSingaporeTime } from "../../utils/timezoneHelper";
 import { useGeneralSettingsStore } from "../../stores/generalSettingsStore";
+import { isDishAvailableNow } from "../../utils/timeAvailabilityHelper";
 
 const { width } = Dimensions.get("window");
 
@@ -701,6 +702,16 @@ export default function CustomerMenuScreen() {
     );
   }
 
+  // Live time ticker for auto dish disappearance/appearance based on AvailableTimeFrom/AvailableTimeTo
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 15000); // Check every 15s for live auto update
+    return () => clearInterval(timer);
+  }, []);
+
   const filteredDishes = allDishes.filter((dish: any) => {
     const isPub = dish.IsPublished !== undefined ? dish.IsPublished : dish.isPublished;
     const catPub = dish.CategoryPublished !== undefined ? dish.CategoryPublished : dish.categoryPublished;
@@ -709,6 +720,13 @@ export default function CustomerMenuScreen() {
     // Show if published on Dish, Category, and Group level for QR menu (IsPublished === 1 or true or '1' or undefined)
     const isUnpublished = (val: any) => val === 0 || val === false || String(val) === '0';
     if (isUnpublished(isPub) || isUnpublished(catPub) || isUnpublished(grpPub)) {
+      return false;
+    }
+
+    // Hide if outside AvailableTimeFrom and AvailableTimeTo range
+    const timeFrom = dish.AvailableTimeFrom || dish.availableTimeFrom;
+    const timeTo = dish.AvailableTimeTo || dish.availableTimeTo;
+    if (!isDishAvailableNow(timeFrom, timeTo, currentTime)) {
       return false;
     }
 

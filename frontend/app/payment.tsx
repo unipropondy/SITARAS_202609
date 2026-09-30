@@ -1749,7 +1749,7 @@ export default function PaymentScreen() {
         payments: finalPayments,
         memberId: memberOverride?.MemberId || selectedMember?.MemberId || null,
         roundOff: displayedRoundOff,
-        cashierId: user?.userId,
+        cashierId: user?.userId || user?.userName || user?.userCode || "owner",
         tableId: context?.tableId,
         serverId: context?.serverId,
         serverName: context?.serverName,
